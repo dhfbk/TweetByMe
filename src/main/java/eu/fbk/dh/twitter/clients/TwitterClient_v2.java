@@ -23,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,6 +61,7 @@ public abstract class TwitterClient_v2 {
     public TwitterClient_v2(String bearerToken) {
         this.bearerToken = bearerToken;
         RequestConfig requestConfigForStream = RequestConfig.custom()
+                .setSocketTimeout(60000)
                 .setCookieSpec(CookieSpecs.STANDARD).build();
         httpClientForStream = HttpClients.custom().setDefaultRequestConfig(requestConfigForStream).build();
 
@@ -147,6 +149,7 @@ public abstract class TwitterClient_v2 {
 
         queryParameters.add(new BasicNameValuePair("max_results", MAX_RESULTS));
 
+        // Do not break this loop, otherwise the tag will be marked as done
         while (next_token != null) {
             if (isClosed.get()) {
                 return false;
@@ -178,6 +181,15 @@ public abstract class TwitterClient_v2 {
             if (null != entity) {
                 String searchResponse = EntityUtils.toString(entity, "UTF-8");
                 JSONObject json = new JSONObject(searchResponse);
+                if (json.has("errors")) {
+                    JSONArray errors = json.getJSONArray("errors");
+                    for (int i = 0; i < errors.length(); i++) {
+                        JSONObject errorsJSONObject = errors.getJSONObject(i);
+                        if (errorsJSONObject.has("message")) {
+                            logger.error(errorsJSONObject.getString("message"));
+                        }
+                    }
+                }
                 if (json.has("meta")) {
                     JSONObject meta = json.getJSONObject("meta");
                     if (meta.has("next_token")) {
@@ -210,7 +222,11 @@ public abstract class TwitterClient_v2 {
     /*
      * Helper method to get existing rules
      * */
-    public BiMap<String, String> getRules() throws URISyntaxException, IOException {
+//    public BiMap<String, String> getRules() throws URISyntaxException, IOException {
+//        return getRules(null);
+//    }
+
+    public BiMap<String, String> getRules(String prefix) throws URISyntaxException, IOException {
         BiMap<String, String> rules = HashBiMap.create();
         URIBuilder uriBuilderStream = new URIBuilder(URI_STREAM_RULES);
 
@@ -225,6 +241,10 @@ public abstract class TwitterClient_v2 {
                 JSONArray array = (JSONArray) json.get("data");
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jsonObject = (JSONObject) array.get(i);
+                    String tag = jsonObject.getString("tag");
+                    if (prefix != null && !tag.startsWith(prefix + "-")) {
+                        continue;
+                    }
                     rules.put(jsonObject.getString("id"), jsonObject.getString("value"));
                 }
             }
@@ -247,16 +267,17 @@ public abstract class TwitterClient_v2 {
     /*
      * Helper method to create rules for filtering
      * */
-    public void createRules(Collection<String> rules) throws URISyntaxException, IOException {
+    public void createRules(Collection<String> rules, String prefix) throws URISyntaxException, IOException {
         if (rules.size() == 0) {
             return;
         }
 
         JsonArray addArray = new JsonArray();
         for (String key : rules) {
+            String tag = prefix + "-" + key;
             JsonObject tagObject = new JsonObject();
             tagObject.addProperty("value", key);
-            tagObject.addProperty("tag", key);
+            tagObject.addProperty("tag", tag);
             addArray.add(tagObject);
         }
         JsonObject finalObject = new JsonObject();

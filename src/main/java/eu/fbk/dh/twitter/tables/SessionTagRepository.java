@@ -16,7 +16,7 @@ public interface SessionTagRepository extends CrudRepository<SessionTag, Long> {
     @Query("FROM SessionTag WHERE session_id = :session_id")
     List<SessionTag> getSessionTagsPerSession(Long session_id);
 
-    @Query("FROM SessionTag WHERE done = 0 ORDER BY session_id")
+    @Query("FROM SessionTag WHERE done = 0 ORDER BY session_id, tag")
     List<SessionTag> getUnfinishedSessionTags();
 
     @Transactional

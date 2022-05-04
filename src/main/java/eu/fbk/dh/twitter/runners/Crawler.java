@@ -15,18 +15,20 @@ public class Crawler implements Runnable {
     private SessionRepository sessionRepository;
     private SessionTagRepository sessionTagRepository;
     private TagRepository tagRepository;
+    private ForeverTagRepository foreverTagRepository;
 
     protected static final Logger logger = LogManager.getLogger();
     private static Integer SLEEP_MS = 1000;
 
     public Crawler(TwitterClientSave_v2 twitterClient_v2, RecentUpdaterRunner recentUpdaterRunner,
                    SessionRepository sessionRepository, SessionTagRepository sessionTagRepository,
-                   TagRepository tagRepository) {
+                   TagRepository tagRepository, ForeverTagRepository foreverTagRepository) {
         this.twitterClient_v2 = twitterClient_v2;
         this.recentUpdaterRunner = recentUpdaterRunner;
         this.sessionRepository = sessionRepository;
         this.sessionTagRepository = sessionTagRepository;
         this.tagRepository = tagRepository;
+        this.foreverTagRepository = foreverTagRepository;
     }
 
     @Override
@@ -37,8 +39,9 @@ public class Crawler implements Runnable {
                 long session_id = System.currentTimeMillis() / 1000L;
                 logger.info("Starting session {}", session_id);
                 try {
-                    List<Session> lastSession = sessionRepository.getSessionsSortedByTimeDesc();
                     long start_time = session_id;
+
+                    List<Session> lastSession = sessionRepository.getSessionsSortedByTimeDesc();
                     if (lastSession.size() == 1) {
                         start_time = lastSession.get(0).getEnd_time();
                     }
@@ -53,21 +56,35 @@ public class Crawler implements Runnable {
 
                     List<Session> unfinishedSessions = sessionRepository.getUnfinishedSessions(session_id);
                     for (Session unfinishedSession : unfinishedSessions) {
-                        Long old_start_time = unfinishedSession.getStart_time();
                         Long old_session_id = unfinishedSession.getSession_id();
+                        Long old_end_time = unfinishedSession.getEnd_time();
 
                         List<SessionTag> unfinishedSessionTags = sessionTagRepository.getSessionTagsPerSession(old_session_id);
                         if (unfinishedSessionTags.size() > 0) {
                             continue;
                         }
 
-                        List<Tag> tagsWithInterval = tagRepository.getTagsWithInterval(old_start_time, old_start_time);
+                        List<Tag> tagsWithInterval = tagRepository.getTagsWithInterval(old_end_time, session_id);
                         for (Tag tag : tagsWithInterval) {
                             SessionTag sessionTag = new SessionTag();
                             sessionTag.setTag(tag.getTag());
                             sessionTag.setSession_id(old_session_id);
-                            sessionTag.setStart_time(old_start_time);
-                            sessionTag.setEnd_time(old_session_id);
+                            sessionTag.setStart_time(old_end_time);
+                            sessionTag.setEnd_time(session_id);
+                            sessionTagRepository.save(sessionTag);
+                            notification = true;
+                        }
+
+                        List<ForeverTag> foreverTagsWithInterval = foreverTagRepository.getTagsWithInterval(old_end_time);
+//                        logger.debug(foreverTagsWithInterval);
+//                        logger.debug(old_end_time);
+                        for (ForeverTag tag : foreverTagsWithInterval) {
+                            SessionTag sessionTag = new SessionTag();
+                            sessionTag.setTag(tag.getTag());
+                            sessionTag.setSession_id(old_session_id);
+                            sessionTag.setStart_time(old_end_time);
+                            sessionTag.setEnd_time(session_id);
+//                            logger.debug(sessionTag);
                             sessionTagRepository.save(sessionTag);
                             notification = true;
                         }

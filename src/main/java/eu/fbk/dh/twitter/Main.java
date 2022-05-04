@@ -1,12 +1,11 @@
 package eu.fbk.dh.twitter;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.Sets;
 import eu.fbk.dh.twitter.clients.GenericClient;
 import eu.fbk.dh.twitter.clients.TwitterClient_v1;
 import eu.fbk.dh.twitter.mongo.TweetRepository;
-import eu.fbk.dh.twitter.runners.Crawler;
-import eu.fbk.dh.twitter.runners.RecentUpdaterRunner;
-import eu.fbk.dh.twitter.runners.TrendsDownloader;
-import eu.fbk.dh.twitter.runners.UpdateRecent;
+import eu.fbk.dh.twitter.runners.*;
 import eu.fbk.dh.twitter.tables.*;
 import eu.fbk.dh.twitter.utils.Defaults;
 import org.apache.logging.log4j.LogManager;
@@ -15,9 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.core.MongoOperations;
 
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,12 +25,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Main implements CommandLineRunner {
 
     protected static final Logger logger = LogManager.getLogger();
+    private static String FOREVER_PREFIX = "forever";
 
-    private static boolean RUN_TREND_SERVER = true;
-    private static boolean RUN_UPDATE_PREVIOUS = true;
-    private static boolean RUN_CRAWLER = true;
+//    private static boolean RUN_TREND_SERVER = true;
+//    private static boolean RUN_UPDATE_PREVIOUS = true;
+//    private static boolean RUN_CRAWLER = true;
 
     private static Integer SLEEP_MS = 2000;
+    private static Integer EMPTY_MS = 5000;
 
     HashMap<String, String> options = Defaults.getDefaultOptions();
     TwitterClient_v1 twitterClient_v1;
@@ -62,6 +62,8 @@ public class Main implements CommandLineRunner {
     private TagRepository tagRepository;
     @Autowired
     private HistoryTagRepository historyTagRepository;
+    @Autowired
+    private ForeverTagRepository foreverTagRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
@@ -71,16 +73,7 @@ public class Main implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         loadOptions();
-
-        if (options.get("app.empty_db").equals("1")) {
-            Option option = new Option();
-            option.setId("app.empty_db");
-            option.setValue("0");
-            optionRepository.save(option);
-            tagRepository.deleteAll();
-            sessionRepository.deleteAll();
-            sessionTagRepository.deleteAll();
-        }
+        String bearerToken = options.get("twitter.bearer");
 
         twitterClient_v1 = new TwitterClient_v1(
                 options.get("twitter.consumer_key"),
@@ -98,42 +91,95 @@ public class Main implements CommandLineRunner {
                 options.get("tweet.ppp_protocol"),
                 options.get("tweet.ppp_address"));
 
-        String bearerToken = options.get("twitter.bearer");
-//        if (bearerToken == null || bearerToken.length() == 0) {
-//            logger.error("Twitter bearer token is null, exiting...");
-//            this.setInterrupt();
-//            return;
-//        }
         twitterClient_v2 = new TwitterClientSave_v2(bearerToken, tweetRepository, twitterConverter, ppp,
                 Long.parseLong(options.get("tweet.alive_interval_minutes")) * 60,
-                sessionRepository, tagRepository, sessionTagRepository);
+                sessionRepository, tagRepository, sessionTagRepository, foreverTagRepository);
 
-//        if (interrupt.get()) {
-//            return;
-//        }
+        if (options.get("app.empty_db").equals("1")) {
+            logger.warn(String.format("Emptying database in %d seconds", EMPTY_MS / 1000));
+            Thread.sleep(EMPTY_MS);
 
-        recentUpdaterRunner = new RecentUpdaterRunner(twitterClient_v2, sessionTagRepository, tagRepository);
+            Option option = new Option();
+            option.setId("app.empty_db");
+            option.setValue("0");
+            optionRepository.save(option);
 
-        Crawler tweetsCrawler = new Crawler(twitterClient_v2, recentUpdaterRunner, sessionRepository, sessionTagRepository, tagRepository);
+            // Delete SQLite
+            tagRepository.deleteAll();
+            sessionRepository.deleteAll();
+            sessionTagRepository.deleteAll();
+            foreverTagRepository.deleteAll();
+            historyTagRepository.deleteAll();
+
+            // Delete mongo
+            tweetRepository.deleteAll();
+
+            // Delete rules
+            BiMap<String, String> rules = twitterClient_v2.getRules(null);
+            List<String> rulesToDelete = new ArrayList<>(rules.keySet());
+            twitterClient_v2.deleteRules(rulesToDelete);
+        }
+
+        // todo: execute this at fixed rate
+        BiMap<String, String> foreverRules = twitterClient_v2.getRules(FOREVER_PREFIX);
+        Set<String> initialHashtags = new HashSet<>(foreverRules.values());
+
+        List<ForeverTag> foreverTags = foreverTagRepository.getTags();
+        Set<String> finalHashtags = new HashSet<>();
+        for (ForeverTag unexpiredTag : foreverTags) {
+            String tag = unexpiredTag.getTag();
+            finalHashtags.add(tag + " lang:it");
+        }
+
+        Sets.SetView<String> toDelete = Sets.difference(initialHashtags, finalHashtags);
+        Sets.SetView<String> toAdd = Sets.difference(finalHashtags, initialHashtags);
+
+        List<String> idsToDelete = new ArrayList<>();
+        for (String tag : toDelete) {
+            String id = foreverRules.inverse().get(tag);
+            idsToDelete.add(id);
+        }
+
+        logger.debug("Rules to delete: {}", idsToDelete.toString());
+        twitterClient_v2.deleteRules(idsToDelete);
+        logger.debug("Rules to add: {}", toAdd.toString());
+        twitterClient_v2.createRules(toAdd, FOREVER_PREFIX);
+
+        recentUpdaterRunner = new RecentUpdaterRunner(twitterClient_v2, foreverTagRepository, sessionTagRepository, tagRepository, Integer.parseInt(options.get("tweet.group_by")));
+
+        Crawler tweetsCrawler = new Crawler(twitterClient_v2, recentUpdaterRunner, sessionRepository, sessionTagRepository, tagRepository, foreverTagRepository);
 
         AtomicBoolean trendsClientRunning = new AtomicBoolean(false);
         TrendsDownloader trendsDownloader = new TrendsDownloader(twitterClient_v1, twitterClient_v2, options, tagRepository, trendsClientRunning, recentUpdaterRunner, historyTagRepository);
 
-        trendsExecutor = Executors.newScheduledThreadPool(2);
-        if (RUN_TREND_SERVER) {
+        trendsExecutor = Executors.newScheduledThreadPool(2, new namedThreadFactory("trends-executor"));
+        if (options.get("app.run_trend_server").equals("1")) {
+            logger.info("RUNNING trend launcher");
             trendsExecutor.scheduleAtFixedRate(trendsDownloader, 0L, Long.parseLong(options.get("tweet.trends_update_interval_minutes")), TimeUnit.MINUTES);
         }
+        else {
+            logger.info("**NOT** RUNNING trend launcher");
+        }
+
         trendsExecutor.scheduleAtFixedRate(this::loadOptions, 0L, Long.parseLong(options.get("tweet.options_update_interval_minutes")), TimeUnit.MINUTES);
 
-        crawlerThread = new Thread(tweetsCrawler);
-        if (RUN_CRAWLER) {
+        crawlerThread = new Thread(tweetsCrawler, "tweets-crawler");
+        if (options.get("app.run_crawler").equals("1")) {
+            logger.info("RUNNING crawler");
             crawlerThread.start();
+        }
+        else {
+            logger.info("**NOT** RUNNING crawler");
         }
 
         updateRecent = new UpdateRecent(recentUpdaterRunner);
-        updateRecentThread = new Thread(updateRecent);
-        if (RUN_UPDATE_PREVIOUS) {
+        updateRecentThread = new Thread(updateRecent, "update-recent");
+        if (options.get("app.run_update_previous").equals("1")) {
+            logger.info("RUNNING recent tweets updater");
             updateRecentThread.start();
+        }
+        else {
+            logger.info("**NOT** RUNNING recent tweets updater");
         }
 
         while (true) {

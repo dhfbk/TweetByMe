@@ -5,10 +5,7 @@ import eu.fbk.dh.twitter.clients.GenericClient;
 import eu.fbk.dh.twitter.clients.TwitterClient_v2;
 import eu.fbk.dh.twitter.mongo.Tweet;
 import eu.fbk.dh.twitter.mongo.TweetRepository;
-import eu.fbk.dh.twitter.tables.Session;
-import eu.fbk.dh.twitter.tables.SessionRepository;
-import eu.fbk.dh.twitter.tables.SessionTagRepository;
-import eu.fbk.dh.twitter.tables.TagRepository;
+import eu.fbk.dh.twitter.tables.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,6 +30,7 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
     private SessionRepository sessionRepository;
     private TagRepository tagRepository;
     private SessionTagRepository sessionTagRepository;
+    private ForeverTagRepository foreverTagRepository;
 
     String pattern = "EEE MMM dd HH:mm:ss Z yyyy";
     SimpleDateFormat format = new SimpleDateFormat(pattern);
@@ -44,7 +42,8 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
     public TwitterClientSave_v2(String bearerToken, TweetRepository tweetRepository,
                                 GenericClient twitterConverter, GenericClient ppp,
                                 long interval,
-                                SessionRepository sessionRepository, TagRepository tagRepository, SessionTagRepository sessionTagRepository) {
+                                SessionRepository sessionRepository, TagRepository tagRepository,
+                                SessionTagRepository sessionTagRepository, ForeverTagRepository foreverTagRepository) {
         super(bearerToken);
         this.tweetRepository = tweetRepository;
         this.twitterConverter = twitterConverter;
@@ -53,6 +52,7 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
         this.sessionRepository = sessionRepository;
         this.tagRepository = tagRepository;
         this.sessionTagRepository = sessionTagRepository;
+        this.foreverTagRepository = foreverTagRepository;
     }
 
     @Override
@@ -85,6 +85,12 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
         String tag = ids.get("tag");
 
         try {
+            if (ids.containsKey("forever_time")) {
+                long insert_time = Long.parseLong(ids.get("forever_time"));
+                foreverTagRepository.updateNextToken(next_token, tag, insert_time);
+                logger.debug("Updated next_token data ({}) for forever-tag {} and insert_time {}", next_token, tag, insert_time);
+            }
+
             if (ids.containsKey("insert_time")) {
                 long insert_time = Long.parseLong(ids.get("insert_time"));
                 tagRepository.updateNextToken(next_token, tag, insert_time);
@@ -93,8 +99,16 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
 
             if (ids.containsKey("session_id")) {
                 long session_id = Long.parseLong(ids.get("session_id"));
-                sessionTagRepository.updateNextToken(next_token, tag, session_id);
-                logger.debug("Updated next_token data ({}) for tag {} and session_id {}", next_token, tag, session_id);
+                if (tag == null) {
+                    String[] tags = ids.get("tags").split("\\s+");
+                    for (String thisTag : tags) {
+                        sessionTagRepository.updateNextToken(next_token, thisTag, session_id);
+                        logger.debug("Updated next_token data ({}) for tag {} and session_id {}", next_token, thisTag, session_id);
+                    }
+                } else {
+                    sessionTagRepository.updateNextToken(next_token, tag, session_id);
+                    logger.debug("Updated next_token data ({}) for tag {} and session_id {}", next_token, tag, session_id);
+                }
             }
         } catch (Exception e) {
             logger.error("{}", e.getMessage());

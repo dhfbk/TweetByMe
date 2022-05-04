@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TrendsDownloader implements Runnable {
 
     protected static final Logger logger = LogManager.getLogger();
+    private static String TRENDS_PREFIX = "trend";
 
     TwitterClient_v1 twitterClient_v1;
     TwitterClient_v2 twitterClient_v2;
@@ -56,7 +57,7 @@ public class TrendsDownloader implements Runnable {
 
             long now = System.currentTimeMillis() / 1000L;
 
-            BiMap<String, String> rules = twitterClient_v2.getRules();
+            BiMap<String, String> rules = twitterClient_v2.getRules(TRENDS_PREFIX);
             Set<String> initialHashtags = new HashSet<>(rules.values());
             logger.debug("Rules: {}", initialHashtags.toString());
 
@@ -92,7 +93,7 @@ public class TrendsDownloader implements Runnable {
                     tagRepository.updateExpiredTime(expired_time, trend, now);
                 }
                 if (!present) {
-                    long start_time = now - Long.parseLong(options.get("tweet.collect_next_days")) * 24L * 60L * 60L;
+                    long start_time = now - Long.parseLong(options.get("tweet.collect_previous_days")) * 24L * 60L * 60L;
                     Tag tag = new Tag();
                     tag.setTag(trend);
                     tag.setInsert_time(now);
@@ -132,7 +133,7 @@ public class TrendsDownloader implements Runnable {
             logger.debug("Rules to delete: {}", idsToDelete.toString());
             twitterClient_v2.deleteRules(idsToDelete);
             logger.debug("Rules to add: {}", toAdd.toString());
-            twitterClient_v2.createRules(toAdd);
+            twitterClient_v2.createRules(toAdd, TRENDS_PREFIX);
 
             logger.info("Ending trends client");
         } catch (Exception e) {
