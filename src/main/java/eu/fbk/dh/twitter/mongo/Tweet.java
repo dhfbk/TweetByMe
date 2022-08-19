@@ -21,15 +21,17 @@ public class Tweet {
     String source;
     Integer reply_count;
     Map<String, Object> retweeted_status;
-    Map<String, Object> replied_to;
+    String replied_to;
     Map<String, Object> quoted_status;
     Integer retweet_count;
     Long created_at_ts;
     Entities entities;
     String conversation_id;
+    String in_reply_to_user_id;
     String text;
     String lang;
     Map<String, Object> user;
+    Map<String, Object> geo;
     Integer quote_count;
     List<Object> matching_rules;
 

@@ -9,6 +9,7 @@ import java.util.Map;
 public class Entities {
     List<Hashtag> hashtags;
     Map<String, Object> media;
-    List<Map<String, Object>> user_mentions;
+    Map<String, Map<String, Object>> user_mentions;
+    Map<String, Map<String, Object>> annotations;
     List<Map<String, Object>> url;
 }

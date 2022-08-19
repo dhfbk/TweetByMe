@@ -20,12 +20,12 @@ public interface ForeverTagRepository extends CrudRepository<ForeverTag, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE ForeverTag SET done = 1, next_token = '' WHERE tag = :tag AND insert_time = :insert_time")
-    void setTagDone(String tag, Long insert_time);
+    @Query("UPDATE ForeverTag SET done = 1, next_token = '' WHERE tag = :tag AND lang = :lang AND insert_time = :insert_time")
+    void setTagDone(String tag, String lang, Long insert_time);
 
     @Transactional
     @Modifying
-    @Query("UPDATE ForeverTag SET next_token = :next_token WHERE tag = :tag AND insert_time = :insert_time")
-    void updateNextToken(String next_token, String tag, Long insert_time);
+    @Query("UPDATE ForeverTag SET next_token = :next_token WHERE tag = :tag AND lang = :lang AND insert_time = :insert_time")
+    void updateNextToken(String next_token, String tag, String lang, Long insert_time);
 
 }

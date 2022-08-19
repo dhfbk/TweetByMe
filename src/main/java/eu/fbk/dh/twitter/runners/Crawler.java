@@ -18,7 +18,7 @@ public class Crawler implements Runnable {
     private ForeverTagRepository foreverTagRepository;
 
     protected static final Logger logger = LogManager.getLogger();
-    private static Integer SLEEP_MS = 1000;
+    public static Integer SLEEP_MS = 1000;
 
     public Crawler(TwitterClientSave_v2 twitterClient_v2, RecentUpdaterRunner recentUpdaterRunner,
                    SessionRepository sessionRepository, SessionTagRepository sessionTagRepository,
@@ -68,6 +68,7 @@ public class Crawler implements Runnable {
                         for (Tag tag : tagsWithInterval) {
                             SessionTag sessionTag = new SessionTag();
                             sessionTag.setTag(tag.getTag());
+                            sessionTag.setLang(tag.getLang());
                             sessionTag.setSession_id(old_session_id);
                             sessionTag.setStart_time(old_end_time);
                             sessionTag.setEnd_time(session_id);
@@ -81,6 +82,7 @@ public class Crawler implements Runnable {
                         for (ForeverTag tag : foreverTagsWithInterval) {
                             SessionTag sessionTag = new SessionTag();
                             sessionTag.setTag(tag.getTag());
+                            sessionTag.setLang(tag.getLang());
                             sessionTag.setSession_id(old_session_id);
                             sessionTag.setStart_time(old_end_time);
                             sessionTag.setEnd_time(session_id);

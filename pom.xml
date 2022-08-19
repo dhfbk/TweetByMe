@@ -10,7 +10,7 @@
     </parent>
     <groupId>eu.fbk.dh</groupId>
     <artifactId>tweet-repository</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>tweet-repository</name>
     <description>Tweet repository</description>
 

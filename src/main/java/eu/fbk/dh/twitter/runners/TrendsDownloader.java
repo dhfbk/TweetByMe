@@ -84,18 +84,22 @@ public class TrendsDownloader implements Runnable {
                 List<Tag> unexpiredTagsByTag = tagRepository.getUnexpiredTagsByTag(trend, now);
                 boolean present = unexpiredTagsByTag.size() > 0;
 
+                String lang = options.get("tweet.trends_lang");
+
                 HistoryTag historyTag = new HistoryTag();
                 historyTag.setTag(trend);
                 historyTag.setSession_id(now);
+                historyTag.setLang(lang);
                 historyTagRepository.save(historyTag);
 
                 if (present && update) {
-                    tagRepository.updateExpiredTime(expired_time, trend, now);
+                    tagRepository.updateExpiredTime(expired_time, trend, lang, now);
                 }
                 if (!present) {
                     long start_time = now - Long.parseLong(options.get("tweet.collect_previous_days")) * 24L * 60L * 60L;
                     Tag tag = new Tag();
                     tag.setTag(trend);
+                    tag.setLang(lang);
                     tag.setInsert_time(now);
                     tag.setStart_time(start_time);
                     tag.setExpired_time(expired_time);
@@ -115,7 +119,8 @@ public class TrendsDownloader implements Runnable {
             Set<String> finalHashtags = new HashSet<>();
             for (Tag unexpiredTag : unexpiredTags) {
                 String tag = unexpiredTag.getTag();
-                finalHashtags.add(tag + " lang:it");
+                String lang = unexpiredTag.getLang();
+                finalHashtags.add(tag + " lang:" + lang);
             }
 
             logger.trace("Initial rules: {}", initialHashtags);

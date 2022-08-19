@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import eu.fbk.dh.twitter.runners.Crawler;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.CookieSpecs;
@@ -22,6 +23,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -82,8 +84,8 @@ public abstract class TwitterClient_v2 {
 
         URIBuilder uriBuilder = new URIBuilder(URI_STREAM)
                 .addParameter("tweet.fields", "attachments,author_id,context_annotations,created_at,conversation_id,entities,geo,id,in_reply_to_user_id,lang,possibly_sensitive,public_metrics,referenced_tweets,source,text,withheld,reply_settings").
-                        addParameter("expansions", "referenced_tweets.id,referenced_tweets.id.author_id,entities.mentions.username,attachments.poll_ids,attachments.media_keys,in_reply_to_user_id,geo.place_id,author_id").
-                        addParameter("user.fields", "created_at,description,entities,location,name,pinned_tweet_id,profile_image_url,protected,url,username,verified,withheld,public_metrics");
+                addParameter("expansions", "referenced_tweets.id,referenced_tweets.id.author_id,entities.mentions.username,attachments.poll_ids,attachments.media_keys,in_reply_to_user_id,geo.place_id,author_id").
+                addParameter("user.fields", "created_at,description,entities,location,name,pinned_tweet_id,profile_image_url,protected,url,username,verified,withheld,public_metrics");
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
@@ -104,14 +106,20 @@ public abstract class TwitterClient_v2 {
                     continue;
                 }
                 streamToken();
-                JSONObject json = new JSONObject(line);
-                if (json.has("matching_rules")) {
-                    JSONArray rules = (JSONArray) json.get("matching_rules");
-                    if (++tweetsFromStream >= STREAM_LOG_AMOUNT) {
-                        logger.info("Bunch of {} tweets from streaming", tweetsFromStream);
-                        tweetsFromStream = 0;
+                try {
+                    JSONObject json = new JSONObject(line);
+                    if (json.has("matching_rules")) {
+                        JSONArray rules = (JSONArray) json.get("matching_rules");
+                        if (++tweetsFromStream >= STREAM_LOG_AMOUNT) {
+                            logger.info("Bunch of {} tweets from streaming", tweetsFromStream);
+                            tweetsFromStream = 0;
+                        }
+                        processTweet(json, rules);
                     }
-                    processTweet(json, rules);
+                }
+                catch (JSONException e) {
+                    logger.error("JSON error (is Bearer token correct?): " + e.getMessage());
+                    Thread.sleep(Crawler.SLEEP_MS);
                 }
             }
         }
@@ -168,8 +176,8 @@ public abstract class TwitterClient_v2 {
 
             URIBuilder uriBuilderSearch = new URIBuilder(URI_SEARCH)
                     .addParameter("tweet.fields", "attachments,author_id,context_annotations,created_at,conversation_id,entities,geo,id,in_reply_to_user_id,lang,possibly_sensitive,public_metrics,referenced_tweets,source,text,withheld,reply_settings").
-                            addParameter("expansions", "referenced_tweets.id,referenced_tweets.id.author_id,entities.mentions.username,attachments.poll_ids,attachments.media_keys,in_reply_to_user_id,geo.place_id,author_id").
-                            addParameter("user.fields", "created_at,description,entities,location,name,pinned_tweet_id,profile_image_url,protected,url,username,verified,withheld,public_metrics");
+                    addParameter("expansions", "referenced_tweets.id,referenced_tweets.id.author_id,entities.mentions.username,attachments.poll_ids,attachments.media_keys,in_reply_to_user_id,geo.place_id,author_id").
+                    addParameter("user.fields", "created_at,description,entities,location,name,pinned_tweet_id,profile_image_url,protected,url,username,verified,withheld,public_metrics");
             uriBuilderSearch.addParameters(newQueryParameters);
 
             HttpGet httpGet = new HttpGet(uriBuilderSearch.build());
@@ -238,14 +246,19 @@ public abstract class TwitterClient_v2 {
         if (null != entity) {
             JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
             if (json.length() > 1) {
-                JSONArray array = (JSONArray) json.get("data");
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject jsonObject = (JSONObject) array.get(i);
-                    String tag = jsonObject.getString("tag");
-                    if (prefix != null && !tag.startsWith(prefix + "-")) {
-                        continue;
+                if (json.has("data")) {
+                    JSONArray array = (JSONArray) json.get("data");
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject jsonObject = (JSONObject) array.get(i);
+                        String tag = jsonObject.getString("tag");
+                        if (prefix != null && !tag.startsWith(prefix + "-")) {
+                            continue;
+                        }
+                        rules.put(jsonObject.getString("id"), jsonObject.getString("value"));
                     }
-                    rules.put(jsonObject.getString("id"), jsonObject.getString("value"));
+                } else {
+                    logger.error("Unable to read rules (is Bearer token correct?)");
+                    System.exit(1);
                 }
             }
         }

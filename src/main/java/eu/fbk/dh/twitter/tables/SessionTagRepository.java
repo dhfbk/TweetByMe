@@ -10,8 +10,8 @@ import java.util.List;
 public interface SessionTagRepository extends CrudRepository<SessionTag, Long> {
     @Transactional
     @Modifying
-    @Query("UPDATE SessionTag SET next_token = :next_token WHERE tag = :tag AND session_id = :session_id")
-    void updateNextToken(String next_token, String tag, Long session_id);
+    @Query("UPDATE SessionTag SET next_token = :next_token WHERE lang = :lang AND tag = :tag AND session_id = :session_id")
+    void updateNextToken(String next_token, String tag, String lang, Long session_id);
 
     @Query("FROM SessionTag WHERE session_id = :session_id")
     List<SessionTag> getSessionTagsPerSession(Long session_id);
@@ -21,6 +21,6 @@ public interface SessionTagRepository extends CrudRepository<SessionTag, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE SessionTag SET done = 1, next_token = '' WHERE tag = :tag AND session_id = :session_id")
-    void updateDone(String tag, Long session_id);
+    @Query("UPDATE SessionTag SET done = 1, next_token = '' WHERE lang = :lang AND tag = :tag AND session_id = :session_id")
+    void updateDone(String tag, String lang, Long session_id);
 }

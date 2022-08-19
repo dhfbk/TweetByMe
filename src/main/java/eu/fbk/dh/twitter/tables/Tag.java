@@ -17,6 +17,7 @@ public class Tag {
     private Long id;
 
     private String tag;
+    private String lang;
     private Long insert_time, start_time, expired_time;
     private Boolean done = false;
     private String next_token = "";

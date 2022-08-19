@@ -37,7 +37,7 @@ public class Main implements CommandLineRunner {
     HashMap<String, String> options = Defaults.getDefaultOptions();
     TwitterClient_v1 twitterClient_v1;
     GenericClient twitterConverter;
-    GenericClient ppp;
+    GenericClient ppp = null;
     TwitterClientSave_v2 twitterClient_v2;
 
     private AtomicBoolean interrupt = new AtomicBoolean(false);
@@ -85,11 +85,13 @@ public class Main implements CommandLineRunner {
                 options.get("tweet.converter_port"),
                 options.get("tweet.converter_protocol"),
                 options.get("tweet.converter_address"));
-        ppp = new GenericClient(
-                options.get("tweet.ppp_host"),
-                options.get("tweet.ppp_port"),
-                options.get("tweet.ppp_protocol"),
-                options.get("tweet.ppp_address"));
+        if (options.get("app.use_ppp").equals("1")) {
+            ppp = new GenericClient(
+                    options.get("tweet.ppp_host"),
+                    options.get("tweet.ppp_port"),
+                    options.get("tweet.ppp_protocol"),
+                    options.get("tweet.ppp_address"));
+        }
 
         twitterClient_v2 = new TwitterClientSave_v2(bearerToken, tweetRepository, twitterConverter, ppp,
                 Long.parseLong(options.get("tweet.alive_interval_minutes")) * 60,
@@ -128,19 +130,22 @@ public class Main implements CommandLineRunner {
         Set<String> finalHashtags = new HashSet<>();
         for (ForeverTag unexpiredTag : foreverTags) {
             String tag = unexpiredTag.getTag();
-            finalHashtags.add(tag + " lang:it");
+            String lang = unexpiredTag.getLang();
+            finalHashtags.add(tag + " lang:" + lang);
         }
 
         Sets.SetView<String> toDelete = Sets.difference(initialHashtags, finalHashtags);
         Sets.SetView<String> toAdd = Sets.difference(finalHashtags, initialHashtags);
 
         List<String> idsToDelete = new ArrayList<>();
+        List<String> tagsToDelete = new ArrayList<>();
         for (String tag : toDelete) {
             String id = foreverRules.inverse().get(tag);
             idsToDelete.add(id);
+            tagsToDelete.add(tag);
         }
 
-        logger.debug("Rules to delete: {}", idsToDelete.toString());
+        logger.debug("Rules to delete: {}", tagsToDelete.toString());
         twitterClient_v2.deleteRules(idsToDelete);
         logger.debug("Rules to add: {}", toAdd.toString());
         twitterClient_v2.createRules(toAdd, FOREVER_PREFIX);

@@ -13,4 +13,5 @@ public class HistoryTag {
     private Long id;
     private Long session_id;
     private String tag;
+    private String lang;
 }

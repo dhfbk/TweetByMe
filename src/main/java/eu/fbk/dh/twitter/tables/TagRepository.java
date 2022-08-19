@@ -23,17 +23,17 @@ public interface TagRepository extends CrudRepository<Tag, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE Tag SET done = 1, next_token = '' WHERE tag = :tag AND insert_time = :insert_time")
-    void setTagDone(String tag, Long insert_time);
+    @Query("UPDATE Tag SET done = 1, next_token = '' WHERE tag = :tag AND lang = :lang AND insert_time = :insert_time")
+    void setTagDone(String tag, String lang, Long insert_time);
 
     @Transactional
     @Modifying
-    @Query("UPDATE Tag SET expired_time = :new_expired_time WHERE tag = :tag AND expired_time > :expired_time")
-    void updateExpiredTime(Long new_expired_time, String tag, Long expired_time);
+    @Query("UPDATE Tag SET expired_time = :new_expired_time WHERE tag = :tag AND lang = :lang AND expired_time > :expired_time")
+    void updateExpiredTime(Long new_expired_time, String tag, String lang, Long expired_time);
 
     @Transactional
     @Modifying
-    @Query("UPDATE Tag SET next_token = :next_token WHERE tag = :tag AND insert_time = :insert_time")
-    void updateNextToken(String next_token, String tag, Long insert_time);
+    @Query("UPDATE Tag SET next_token = :next_token WHERE tag = :tag AND lang = :lang AND insert_time = :insert_time")
+    void updateNextToken(String next_token, String tag, String lang, Long insert_time);
 
 }

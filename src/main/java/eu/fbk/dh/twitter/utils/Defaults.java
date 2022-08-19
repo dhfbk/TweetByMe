@@ -32,6 +32,7 @@ public class Defaults {
         defaultOptions.put("tweet.trends_update_interval_minutes", "5");
         defaultOptions.put("tweet.trends_location", "23424853");
         defaultOptions.put("tweet.trends_number", "5");
+        defaultOptions.put("tweet.trends_lang", "it");
         defaultOptions.put("tweet.trends_number_update", "5");
         defaultOptions.put("tweet.trends_hashtag_only", "true");
 
@@ -43,8 +44,9 @@ public class Defaults {
 
         defaultOptions.put("app.empty_db", "0");
 
-        defaultOptions.put("app.run_trend_server", "1");
+        defaultOptions.put("app.run_trend_server", "0");
         defaultOptions.put("app.run_update_previous", "1");
         defaultOptions.put("app.run_crawler", "1");
+        defaultOptions.put("app.use_ppp", "1");
     }
 }

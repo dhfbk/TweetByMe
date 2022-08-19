@@ -14,6 +14,7 @@ public class ForeverTag {
     private Long insert_time;
     private Long start_time;
     private String tag;
+    private String lang;
     private Boolean active = true;
     private Boolean done = false;
     private String next_token = "";

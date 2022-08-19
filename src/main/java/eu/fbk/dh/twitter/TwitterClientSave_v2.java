@@ -83,17 +83,18 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
     protected void saveToken(Map<String, String> ids, String next_token) {
 
         String tag = ids.get("tag");
+        String lang = ids.get("lang");
 
         try {
             if (ids.containsKey("forever_time")) {
                 long insert_time = Long.parseLong(ids.get("forever_time"));
-                foreverTagRepository.updateNextToken(next_token, tag, insert_time);
+                foreverTagRepository.updateNextToken(next_token, tag, lang, insert_time);
                 logger.debug("Updated next_token data ({}) for forever-tag {} and insert_time {}", next_token, tag, insert_time);
             }
 
             if (ids.containsKey("insert_time")) {
                 long insert_time = Long.parseLong(ids.get("insert_time"));
-                tagRepository.updateNextToken(next_token, tag, insert_time);
+                tagRepository.updateNextToken(next_token, tag, lang, insert_time);
                 logger.debug("Updated next_token data ({}) for tag {} and insert_time {}", next_token, tag, insert_time);
             }
 
@@ -102,11 +103,11 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
                 if (tag == null) {
                     String[] tags = ids.get("tags").split("\\s+");
                     for (String thisTag : tags) {
-                        sessionTagRepository.updateNextToken(next_token, thisTag, session_id);
+                        sessionTagRepository.updateNextToken(next_token, thisTag, lang, session_id);
                         logger.debug("Updated next_token data ({}) for tag {} and session_id {}", next_token, thisTag, session_id);
                     }
                 } else {
-                    sessionTagRepository.updateNextToken(next_token, tag, session_id);
+                    sessionTagRepository.updateNextToken(next_token, tag, lang, session_id);
                     logger.debug("Updated next_token data ({}) for tag {} and session_id {}", next_token, tag, session_id);
                 }
             }
@@ -134,19 +135,21 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
         for (int i = 0; i < json_v1.length(); i++) {
             JSONObject thisTweet = json_v1.getJSONObject(i);
 
-            String text = thisTweet.getString("text");
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("lang", thisTweet.getString("lang"));
-            jsonObject.put("text", text);
-            String emotions = successfullRequest(ppp, jsonObject.toString());
-            if (emotions == null) {
-                continue;
-            }
-
-            JSONObject emotionsObject = new JSONObject(emotions);
             thisTweet.put("matching_rules", rules);
-            thisTweet.put("emotions", emotionsObject);
             thisTweet.put("session_id", session_id);
+            String text = thisTweet.getString("text");
+
+            // Emotions
+            if (ppp != null) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("lang", thisTweet.getString("lang"));
+                jsonObject.put("text", text);
+                String emotions = successfullRequest(ppp, jsonObject.toString());
+                if (emotions != null) {
+                    JSONObject emotionsObject = new JSONObject(emotions);
+                    thisTweet.put("emotions", emotionsObject);
+                }
+            }
 
             String created_at = thisTweet.getString("created_at");
             Date javaDate = null;
