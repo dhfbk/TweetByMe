@@ -14,19 +14,18 @@ The objective of the StandByMe project is to **counter online violence against w
 In this framework, we develeped a tool devoted to analyze online trends on violence against women and girls. The goal is the constitution of a knowledge storage with examples of misogynistic language, that will enable and support activities to counter VAWG.
 In particular, in the current page we release:
 
-- [TweetByMe](#TweetByMe), a software for monitoring and preliminary text processing of social media data (Twitter). 
-- the [domain-specific hashtags and keywords](#domain-specific hashtags and keywords) used to populate, via our software, the project knowledge base with examples of misogynistic language in the three project languages, i.e. Italian, Polish and Hungarian.
+- **TweetByMe**, a software for monitoring and preliminary text processing of social media data (Twitter). 
+- the **domain-specific hashtags and keywords** used to populate, via our software, the project knowledge base with examples of misogynistic language in the three project languages, i.e. Italian, Polish and Hungarian.
 
 
 
 
-# TweetByMe
 ### System overview 
 
 TweetByMe is a tool for capturing, processing, analysing and storing social media data and has the following features:
 
 - operates with the new version of Twitter endpoints (APIv2)
-- outputs data in a standard v1.1 json format 
+- outputs data in a standard v1.1 *json* format 
 - stores the output data in MongoDB
 - handle in a straightforward manner a high number of keywords (up to 1,000 keywords, limit of number of rules by by Twitter)  
 - performs anonymization of data
@@ -41,7 +40,7 @@ The fundamental and central element of TweetByMe is the Twitter crawler, that co
 The Twitter crawler includes three subcomponents: one in charge of the exchanges with Twitter endpoints, a component in charge of managing data format, and a component in charge of several operations of data pre-processing (containing several modules). The Twitter crawler interacts with two databases in charge of storing respectively the configuration of the system and the output data.
 
 <p align="center">
-<img src="img/TweetByMe.png" width="800" alt="Background image">
+<img src="img/TweetByMe.png" width="600" alt="Background image">
 
 <b>Fig. 1</b>:The system architecture diagram of TweetByMe</i>
 </p>
@@ -85,12 +84,12 @@ Once the tweet has been retrieved from the API and converted in the standard jso
 
 The subcomponents are: 
 
-- Anonymization of data: user mentions, URLs, and mentioned email addresses are replaced by a dedicated tag (<user>, <url>, <mail>). All the instances of “money”, “time”, “date” and in general any “number“ are also replaced with a dedicated tag (<time>, <number>, <date>). It is executed using the Ekphrasis tool (Gimpel et al., 2010). This ensures also that any form of personal information or profiling is not included in the process, in compliance with StandByMe privacy requirements and GDPR. The username associated with the Twitter account are deleted.
-- Emoji conversion: the emojis are replaced with their textual descriptions to ease further processing.  The textual descriptions originally available for English (https://unicode.org/emoji/charts/ full-emoji-list.html). Available languages: . 
-- Hashtags splitting: we used the Ekphrasis tool (Gimpel et al., 2010) to recognise the tokens in a hashtag based on n-grams frequencies. Available languages: 
-- Elongated normalisation (slang cleaning): Words ending with repetitions of the final letter (e.g. “hellooooo”) are used very frequently in social media posts to emphasize their content. These occurrences are normalised into the regular words (e.g. “hello”). Available languages: 
-- Lemmatization: inflected words are converted into their dictionary forms, using the Spacy library (https://spacy.io/). Available languages: 
-- Emotion analysis: the emotion detection algorithm applies a dictionary-based approach to match the words in a social media post with the terms listed in the widely used NRC Word-Emotion Association Lexicon (Mohammad et al., 2013), which have been manually associated with eight basic emotions (i.e., anger, fear, anticipation, trust, surprise, sadness, joy, and disgust). The output is an integer value for each of the eight emotions, indicating their presence in a message. Available languages: 
+- *Anonymization of data*: user mentions, URLs, and mentioned email addresses are replaced by a dedicated tag (<user>, <url>, <mail>). All the instances of “money”, “time”, “date” and in general any “number“ are also replaced with a dedicated tag (<time>, <number>, <date>). It is executed using the Ekphrasis tool (Gimpel et al., 2010). This ensures also that any form of personal information or profiling is not included in the process, in compliance with StandByMe privacy requirements and GDPR. The username associated with the Twitter account are deleted.
+- *Emoji conversion*: the emojis are replaced with their textual descriptions to ease further processing.  The textual descriptions originally available for English (https://unicode.org/emoji/charts/ full-emoji-list.html). Available languages: . 
+- *Hashtags splitting*: we used the Ekphrasis tool (Gimpel et al., 2010) to recognise the tokens in a hashtag based on n-grams frequencies. Available languages: 
+- *Elongated normalisation (slang cleaning)*: Words ending with repetitions of the final letter (e.g. “hellooooo”) are used very frequently in social media posts to emphasize their content. These occurrences are normalised into the regular words (e.g. “hello”). Available languages: 
+- *Lemmatization*: inflected words are converted into their dictionary forms, using the Spacy library (https://spacy.io/). Available languages: 
+- *Emotion analysis*: the emotion detection algorithm applies a dictionary-based approach to match the words in a social media post with the terms listed in the widely used NRC Word-Emotion Association Lexicon (Mohammad et al., 2013), which have been manually associated with eight basic emotions (i.e., anger, fear, anticipation, trust, surprise, sadness, joy, and disgust). The output is an integer value for each of the eight emotions, indicating their presence in a message. Available languages: 
 
 At the end of this process, the following changes have been made to the initial json format for each tweet:
 
@@ -104,7 +103,7 @@ At the end of this process, the following changes have been made to the initial 
 Data collected and preprocessed in the previous steps are finally saved in a MongoDB database (https://www.mongodb.com/), where it can be queried for statistical purposes. The database can be hosted on a server (see Twitter-crawler to configure route to database).
 
 
-# Domain-specific hashtags and keywords 
+# Domain-specific_hashtags_keywords 
 Particular attention was paid in the creation of the keywords list that led to the creation of the StandByMe knowledge base of misogynistic messages. 
 Creation of the keywords list was based on a taxonomy derived from existing literature related to misogyny and sexism detection. For each category of the taxonomy, terms were defined that aimed to gather tweets representing the category. This task was executed by domain experts in the project consortium, mother-toungue in Italian, Hungarian and Polish.
 The taxonomy and the keywords used for each category and language are availble in [`keywords_list/`](keywords_list/) folder. The folder contains the query to populate the configuration database with TweetByMe.
