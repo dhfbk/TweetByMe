@@ -8,13 +8,15 @@
 
  
 
-**TweetByMe is a Twitter crawler developed in the StandByMe EU project.** 
+**TweetByMe is a Twitter crawler developed for the StandByMe EU project.** 
+
 The objective of the StandByMe project is to **counter online violence against women and girls** ('VAWG') via youth actions in Italy, Poland and Hungary and the rest of Europe. This goal is pursued through a comprehensive blended learning program composed of offline and online educational materials. Students are empowered in taking action against online VAWG, by facilitating their ability to detect it and supporting their voice as change agents.
 
-In this framework, we develeped a tool devoted to analyze online trends on violence against women and girls. The goal is the constitution of a knowledge storage with examples of misogynistic language, that will enable and support activities to counter VAWG.
+In this framework, we develeped a tool devoted to analyze online trends on violence against women and girls. The tool is meant to be general-purpose, because it monitors tweets by looking for query terms provided by users. In our case, query terms were defined by the domain experts in the project consortium, who helped in creating a keyword matrix in Italian, Hungarian and Polish, to identify misogynistic tweets.The goal is the constitution of a knowledge storage with examples of misogynistic language, that will enable and support activities to counter VAWG.
+
 In particular, in the current page we release:
 
-- **TweetByMe**, a software for monitoring and preliminary text processing of social media data (Twitter). 
+- **TweetByMe**, a software for monitoring and preliminary text processing of Twitter data
 - the **domain-specific hashtags and keywords** used to populate, via our software, the project knowledge base with examples of misogynistic language in the three project languages, i.e. Italian, Polish and Hungarian.
 
 
