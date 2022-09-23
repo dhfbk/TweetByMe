@@ -103,7 +103,7 @@ At the end of this process, the following changes have been made to the initial 
 Data collected and preprocessed in the previous steps are finally saved in a MongoDB database (https://www.mongodb.com/), where it can be queried for statistical purposes. The database can be hosted on a server (see Twitter-crawler to configure route to database).
 
 
-# Domain-specific_hashtags_keywords 
+# Domain-specific hashtags keywords 
 Particular attention was paid in the creation of the keywords list that led to the creation of the StandByMe knowledge base of misogynistic messages. 
 Creation of the keywords list was based on a taxonomy derived from existing literature related to misogyny and sexism detection. For each category of the taxonomy, terms were defined that aimed to gather tweets representing the category. This task was executed by domain experts in the project consortium, mother-toungue in Italian, Hungarian and Polish.
 The taxonomy and the keywords used for each category and language are availble in [`keywords_list/`](keywords_list/) folder. The folder contains the query to populate the configuration database with TweetByMe.
