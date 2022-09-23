@@ -1,5 +1,5 @@
 
-# <center> TweetByMe </center>#
+# <center> TweetByMe </center>
 ## a tool for monitoring and storing multilingual data from Twitter
 
 <p align="center">
