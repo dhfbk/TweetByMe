@@ -16,8 +16,8 @@ In this framework, we develeped a tool devoted to analyze online trends on viole
 
 In particular, in the current page we release:
 
-- **TweetByMe**, a software for monitoring and preliminary text processing of Twitter data
-- the **domain-specific hashtags and keywords** used to populate, via our software, the project knowledge base with examples of misogynistic language in the three project languages, i.e. Italian, Polish and Hungarian.
+- [TweetByMe](system-description), a software for monitoring and preliminary text processing of Twitter data
+- the [domain-specific hashtags and keywords](domain-specific-hashtags-keywords) used to populate, via our software, the project knowledge base with examples of misogynistic language in the three project languages, i.e. Italian, Polish and Hungarian.
 
 
 
