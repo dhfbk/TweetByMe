@@ -217,104 +217,104 @@ Category	Keyword	Lang
 1	col gentilsesso bisogna	it
 1	Col gentilsesso si deve	it
 1	col gentilsesso si deve	it
-1	kobiety do garów	sl
-1	kobiety do garow	sl
-1	miejsce kobiety jest w kuchni	sl
-1	miejsce kobiet jest w kuchni	sl
-1	#kobietydogarow	sl
-1	kobiety nie nadają się do rządzenia	sl
-1	kobiety nie nadaja sie do rzadzenia	sl
-1	kobieta ozdobą meżczyzny	sl
-1	kobieta ozdoba mezczyzny	sl
-2	histeryczka	sl
-2	histeryczki	sl
-2	kobieton	sl
-2	psychopatka	sl
-2	psychopatki	sl
-2	wariatka	sl
-2	wariatki	sl
-2	słodka idiotka	sl
-2	słodkie idiotki	sl
-2	slodka idiotka	sl
-2	slodkie idiotki	sl
-2	kretynka	sl
-2	kretynki	sl
-3	cipa	sl
-3	cipy	sl
-3	dupeczka	sl
-3	dupeczki	sl
-3	suka	sl
-3	suki	sl
-3	cnotka nie wydymka	sl
-3	cnotki nie wydymki	sl
-3	loszka	sl
-3	loszki	sl
-3	wyglądasz jak dziwka	sl
-3	wygladasz jak dziwka	sl
-3	lodziara	sl
-3	lodziary	sl
-3	niunia	sl
-3	niunie	sl
-3	ruchable	sl
-3	nieruchable	sl
-3	puszczalska	sl
-3	puszczalskie	sl
-3	szmata	sl
-3	szmaty	sl
-3	szlaufy	sl
-3	niedoruchana	sl
-3	niedoruchane	sl
-3	niedojebana	sl
-3	niedojebane	sl
-4	#jakbaba	sl
-4	#babazakierownica	sl
-4	Nie bądź baba	sl
-4	nie badz jak baba	sl
-4	Kobieta powinna być	sl
-4	kobieta powinna byc	sl
-4	kobiety powinny być	sl
-4	kobiety powinny byc	sl
-4	Dziewczyna powinna być	sl
-4	dziewczyny powinny być	sl
-4	dziewczyna powinna byc	sl
-4	dziewczyny powinny byc	sl
-4	#głupiababa	sl
-4	Kobiety nie nadają się do	sl
-4	kobiety nie nadaja sie do	sl
-4	kobieta nie nadaje sie do	sl
-4	kobieta nie nadaje się do	sl
-4	Dziewczyny nie nadają się do	sl
-4	Dziewczyna nie nadaje się do	sl
-4	Dziewczyny nie nadaja sie do	sl
-4	Dziewczyna nie nadaje sie do	sl
-5	gwałt	sl
-5	zgwalce cie suk*	sl
-5	zgwałcę cię suk*	sl
-5	gwałcić sukę	sl
-5	gwalcic suke	sl
-5	wyrucham	sl
-5	ruchać	sl
-5	ruchac	sl
-6	życzliwy seksizm	sl
-6	zyczliwy seksizm 	sl
-6	kobiety przodem	sl
-6	kobieta przodem	sl
-6	panie przodem	sl
-7	feminazistka	sl
-7	feminazistki	sl
-7	gendergestapo	sl
-7	genderowa indoktrynacja	sl
-7	feminizm to rak	sl
-8	odwrócony seksizm	sl
-8	kobieca dominacja	sl
-9	lesba	sl
-9	lesby	sl
-9	lewacka lesba	sl
-9	lewackie lesby	sl
-9	morderczyni dzieci	sl
-9	morderczynie dzieci	sl
-9	aborcjonistka	sl
-9	aborcjoniski	sl
-9	#niejestemfeministka	sl
-9	#NieJestemFeministką	sl
-9	#kobietawyzwolon	sl
+1	kobiety do garów	pl
+1	kobiety do garow	pl
+1	miejsce kobiety jest w kuchni	pl
+1	miejsce kobiet jest w kuchni	pl
+1	#kobietydogarow	pl
+1	kobiety nie nadają się do rządzenia	pl
+1	kobiety nie nadaja sie do rzadzenia	pl
+1	kobieta ozdobą meżczyzny	pl
+1	kobieta ozdoba mezczyzny	pl
+2	histeryczka	pl
+2	histeryczki	pl
+2	kobieton	pl
+2	psychopatka	pl
+2	psychopatki	pl
+2	wariatka	pl
+2	wariatki	pl
+2	słodka idiotka	pl
+2	słodkie idiotki	pl
+2	plodka idiotka	pl
+2	plodkie idiotki	pl
+2	kretynka	pl
+2	kretynki	pl
+3	cipa	pl
+3	cipy	pl
+3	dupeczka	pl
+3	dupeczki	pl
+3	suka	pl
+3	suki	pl
+3	cnotka nie wydymka	pl
+3	cnotki nie wydymki	pl
+3	loszka	pl
+3	loszki	pl
+3	wyglądasz jak dziwka	pl
+3	wygladasz jak dziwka	pl
+3	lodziara	pl
+3	lodziary	pl
+3	niunia	pl
+3	niunie	pl
+3	ruchable	pl
+3	nieruchable	pl
+3	puszczalska	pl
+3	puszczalskie	pl
+3	szmata	pl
+3	szmaty	pl
+3	szlaufy	pl
+3	niedoruchana	pl
+3	niedoruchane	pl
+3	niedojebana	pl
+3	niedojebane	pl
+4	#jakbaba	pl
+4	#babazakierownica	pl
+4	Nie bądź baba	pl
+4	nie badz jak baba	pl
+4	Kobieta powinna być	pl
+4	kobieta powinna byc	pl
+4	kobiety powinny być	pl
+4	kobiety powinny byc	pl
+4	Dziewczyna powinna być	pl
+4	dziewczyny powinny być	pl
+4	dziewczyna powinna byc	pl
+4	dziewczyny powinny byc	pl
+4	#głupiababa	pl
+4	Kobiety nie nadają się do	pl
+4	kobiety nie nadaja sie do	pl
+4	kobieta nie nadaje sie do	pl
+4	kobieta nie nadaje się do	pl
+4	Dziewczyny nie nadają się do	pl
+4	Dziewczyna nie nadaje się do	pl
+4	Dziewczyny nie nadaja sie do	pl
+4	Dziewczyna nie nadaje sie do	pl
+5	gwałt	pl
+5	zgwalce cie suk*	pl
+5	zgwałcę cię suk*	pl
+5	gwałcić sukę	pl
+5	gwalcic suke	pl
+5	wyrucham	pl
+5	ruchać	pl
+5	ruchac	pl
+6	życzliwy seksizm	pl
+6	zyczliwy seksizm 	pl
+6	kobiety przodem	pl
+6	kobieta przodem	pl
+6	panie przodem	pl
+7	feminazistka	pl
+7	feminazistki	pl
+7	gendergestapo	pl
+7	genderowa indoktrynacja	pl
+7	feminizm to rak	pl
+8	odwrócony seksizm	pl
+8	kobieca dominacja	pl
+9	lesba	pl
+9	lesby	pl
+9	lewacka lesba	pl
+9	lewackie lesby	pl
+9	morderczyni dzieci	pl
+9	morderczynie dzieci	pl
+9	aborcjonistka	pl
+9	aborcjoniski	pl
+9	#niejestemfeministka	pl
+9	#NieJestemFeministką	pl
+9	#kobietawyzwolon	pl
