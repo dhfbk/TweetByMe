@@ -44,6 +44,10 @@ public abstract class TwitterClient_v2 {
     private String bearerToken;
     private CloseableHttpClient httpClientForStream, httpClientWithTimeout;
     private Socket socket = null;
+    private CloseableHttpResponse response;
+    private ManagedHttpClientConnection connection;
+    private InputStream inputStream;
+    private BufferedReader reader;
 
     public AtomicBoolean isClosed = new AtomicBoolean(false);
 
@@ -91,17 +95,18 @@ public abstract class TwitterClient_v2 {
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
         HttpClientContext context = HttpClientContext.create();
-        CloseableHttpResponse response = httpClientForStream.execute(httpGet, context);
-        ManagedHttpClientConnection connection = context.getConnection(ManagedHttpClientConnection.class);
+        response = httpClientForStream.execute(httpGet, context);
+        connection = context.getConnection(ManagedHttpClientConnection.class);
         socket = connection.getSocket();
 
         HttpEntity entity = response.getEntity();
         if (null != entity) {
-            InputStream inputStream = entity.getContent();
+            inputStream = entity.getContent();
             InputStreamReader stream = new InputStreamReader(inputStream);
-            BufferedReader reader = new BufferedReader(stream);
+            reader = new BufferedReader(stream);
             String line;
             while ((line = reader.readLine()) != null) {
+                logger.debug(line);
                 if (line.trim().length() == 0) {
                     continue;
                 }
@@ -116,8 +121,7 @@ public abstract class TwitterClient_v2 {
                         }
                         processTweet(json, rules);
                     }
-                }
-                catch (JSONException e) {
+                } catch (JSONException e) {
                     logger.error("JSON error (is Bearer token correct?): " + e.getMessage());
                     Thread.sleep(Crawler.SLEEP_MS);
                 }
@@ -128,7 +132,24 @@ public abstract class TwitterClient_v2 {
     public void close() {
         try {
             isClosed.set(true);
+            if (reader != null) {
+                logger.info("Closing reader");
+                reader.close();
+            }
+            if (inputStream != null) {
+                logger.info("Closing stream");
+                inputStream.close();
+            }
+            if (connection != null) {
+                logger.info("Closing connection");
+                connection.close();
+            }
+            if (response != null) {
+                logger.info("Closing response");
+                response.close();
+            }
             if (socket != null) {
+                logger.info("Closing socket");
                 socket.close();
             }
         } catch (IOException e) {
@@ -233,6 +254,12 @@ public abstract class TwitterClient_v2 {
 //    public BiMap<String, String> getRules() throws URISyntaxException, IOException {
 //        return getRules(null);
 //    }
+
+    public void deleteAllRules() throws URISyntaxException, IOException {
+        BiMap<String, String> rules = getRules(null);
+        List<String> rulesToDelete = new ArrayList<>(rules.keySet());
+        deleteRules(rulesToDelete);
+    }
 
     public BiMap<String, String> getRules(String prefix) throws URISyntaxException, IOException {
         BiMap<String, String> rules = HashBiMap.create();

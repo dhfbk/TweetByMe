@@ -8,6 +8,16 @@ import eu.fbk.dh.twitter.mongo.TweetRepository;
 import eu.fbk.dh.twitter.runners.*;
 import eu.fbk.dh.twitter.tables.*;
 import eu.fbk.dh.twitter.utils.Defaults;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +25,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,6 +60,7 @@ public class Main implements CommandLineRunner {
     Thread updateRecentThread;
     UpdateRecent updateRecent;
     ScheduledExecutorService trendsExecutor;
+    ScheduledExecutorService optionsExecutor;
 
     Thread crawlerThread;
 
@@ -71,9 +86,13 @@ public class Main implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-
         loadOptions();
         String bearerToken = options.get("twitter.bearer");
+
+        if (bearerToken == null || bearerToken.isEmpty()) {
+            logger.error("Missing bearer token");
+            System.exit(1);
+        }
 
         twitterClient_v1 = new TwitterClient_v1(
                 options.get("twitter.consumer_key"),
@@ -93,18 +112,14 @@ public class Main implements CommandLineRunner {
                     options.get("tweet.ppp_address"));
         }
 
-        twitterClient_v2 = new TwitterClientSave_v2(bearerToken, tweetRepository, twitterConverter, ppp,
-                Long.parseLong(options.get("tweet.alive_interval_minutes")) * 60,
+        twitterClient_v2 = new TwitterClientSave_v2(options, tweetRepository, twitterConverter, ppp,
                 sessionRepository, tagRepository, sessionTagRepository, foreverTagRepository);
 
         if (options.get("app.empty_db").equals("1")) {
             logger.warn(String.format("Emptying database in %d seconds", EMPTY_MS / 1000));
             Thread.sleep(EMPTY_MS);
 
-            Option option = new Option();
-            option.setId("app.empty_db");
-            option.setValue("0");
-            optionRepository.save(option);
+            optionRepository.saveOption("app.empty_db", "0");
 
             // Delete SQLite
             tagRepository.deleteAll();
@@ -117,9 +132,17 @@ public class Main implements CommandLineRunner {
             tweetRepository.deleteAll();
 
             // Delete rules
-            BiMap<String, String> rules = twitterClient_v2.getRules(null);
-            List<String> rulesToDelete = new ArrayList<>(rules.keySet());
-            twitterClient_v2.deleteRules(rulesToDelete);
+            twitterClient_v2.deleteAllRules();
+
+            logger.info("Exiting");
+            System.exit(1);
+        }
+
+        if (options.get("twitter.empty_rules").equals("1")) {
+            logger.warn(String.format("Deleting Twitter rules in %d seconds", EMPTY_MS / 1000));
+            Thread.sleep(EMPTY_MS);
+            optionRepository.saveOption("twitter.empty_rules", "0");
+            twitterClient_v2.deleteAllRules();
         }
 
         // todo: execute this at fixed rate
@@ -157,23 +180,29 @@ public class Main implements CommandLineRunner {
         AtomicBoolean trendsClientRunning = new AtomicBoolean(false);
         TrendsDownloader trendsDownloader = new TrendsDownloader(twitterClient_v1, twitterClient_v2, options, tagRepository, trendsClientRunning, recentUpdaterRunner, historyTagRepository);
 
-        trendsExecutor = Executors.newScheduledThreadPool(2, new namedThreadFactory("trends-executor"));
         if (options.get("app.run_trend_server").equals("1")) {
             logger.info("RUNNING trend launcher");
+            trendsExecutor = Executors.newScheduledThreadPool(2, new namedThreadFactory("trends-executor"));
             trendsExecutor.scheduleAtFixedRate(trendsDownloader, 0L, Long.parseLong(options.get("tweet.trends_update_interval_minutes")), TimeUnit.MINUTES);
-        }
-        else {
+        } else {
             logger.info("**NOT** RUNNING trend launcher");
         }
 
-        trendsExecutor.scheduleAtFixedRate(this::loadOptions, 0L, Long.parseLong(options.get("tweet.options_update_interval_minutes")), TimeUnit.MINUTES);
+        optionsExecutor = Executors.newScheduledThreadPool(2, new namedThreadFactory("trends-executor"));
+        optionsExecutor.scheduleAtFixedRate(this::loadOptions, 0L, Long.parseLong(options.get("tweet.options_update_interval_minutes")), TimeUnit.MINUTES);
+        long closeInterval = Long.parseLong(options.get("tweet.options_close_stream_minutes"));
+        if (closeInterval > 0) {
+            logger.info("RUNNING closer");
+            optionsExecutor.scheduleAtFixedRate(this::closeStream, closeInterval, closeInterval, TimeUnit.MINUTES);
+        } else {
+            logger.info("**NOT** RUNNING closer");
+        }
 
         crawlerThread = new Thread(tweetsCrawler, "tweets-crawler");
         if (options.get("app.run_crawler").equals("1")) {
             logger.info("RUNNING crawler");
             crawlerThread.start();
-        }
-        else {
+        } else {
             logger.info("**NOT** RUNNING crawler");
         }
 
@@ -182,8 +211,7 @@ public class Main implements CommandLineRunner {
         if (options.get("app.run_update_previous").equals("1")) {
             logger.info("RUNNING recent tweets updater");
             updateRecentThread.start();
-        }
-        else {
+        } else {
             logger.info("**NOT** RUNNING recent tweets updater");
         }
 
@@ -200,47 +228,15 @@ public class Main implements CommandLineRunner {
             }
         }
 
+    }
 
-//        MongoOperations mongoOps = new MongoTemplate(MongoClients.create(), "database");
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        Tweet tweet = objectMapper.readValue(json, Tweet.class);
-//        tweetRepository.save(tweet);
-//        mongoOps.getCollection("pippo").insertOne(Document.parse(json));
-
-//        customerRepository.deleteAll();
-
-//        long now = System.currentTimeMillis() / 1000L;
-//        Session session = new Session();
-//        session.setSession_id(now);
-//        session.setStart_time(now + 1);
-//        session.setEnd_time(now + 2);
-//        sessionRepository.save(session);
-
-        // save a couple of customers
-//        customerRepository.save(new Customer("Alice", "Smith"));
-//        customerRepository.save(new Customer("Bob", "Smith"));
-
-        // fetch all customers
-//        logger.info("Customers found with findAll():");
-//        logger.info("-------------------------------");
-//        for (Customer customer : customerRepository.findAll()) {
-//            logger.info(customer);
-//        }
-
-//        // fetch an individual customer
-//        System.out.println("Customer found with findByFirstName('Alice'):");
-//        System.out.println("--------------------------------");
-//        System.out.println(customerRepository.findByFirstName("Alice"));
-//
-//        System.out.println("Customers found with findByLastName('Smith'):");
-//        System.out.println("--------------------------------");
-//        for (Customer customer : customerRepository.findByLastName("Smith")) {
-//            System.out.println(customer);
-//        }
-
+    private void closeStream() {
+        logger.info("Closing stream");
+        twitterClient_v2.close();
     }
 
     private void loadOptions() {
+        logger.info("Updating options");
         for (Option option : optionRepository.findAll()) {
             options.put(option.getId(), option.getValue());
         }

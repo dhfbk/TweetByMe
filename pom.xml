@@ -10,15 +10,29 @@
     </parent>
     <groupId>eu.fbk.dh</groupId>
     <artifactId>tweet-repository</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <name>tweet-repository</name>
     <description>Tweet repository</description>
 
     <properties>
         <java.version>8</java.version>
+        <start-class>eu.fbk.dh.twitter.Main</start-class>
+        <okhttp-version>4.9.3</okhttp-version>
     </properties>
 
     <dependencies>
+        <!-- keep this (don't know why) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>logging-interceptor</artifactId>
+            <version>${okhttp-version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -33,7 +47,7 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
-<!--        https://www.baeldung.com/spring-boot-logging -->
+        <!--        https://www.baeldung.com/spring-boot-logging -->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -53,6 +67,11 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>com.twitter</groupId>
+            <artifactId>twitter-api-java-sdk</artifactId>
+            <version>2.0.2</version>
+        </dependency>
         <dependency>
             <groupId>org.twitter4j</groupId>
             <artifactId>twitter4j-core</artifactId>

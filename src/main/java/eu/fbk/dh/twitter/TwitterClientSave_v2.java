@@ -2,24 +2,24 @@ package eu.fbk.dh.twitter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.fbk.dh.twitter.clients.GenericClient;
-import eu.fbk.dh.twitter.clients.TwitterClient_v2;
+import eu.fbk.dh.twitter.clients.TwitterClient_v2_api;
 import eu.fbk.dh.twitter.mongo.Tweet;
 import eu.fbk.dh.twitter.mongo.TweetRepository;
 import eu.fbk.dh.twitter.tables.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.MissingResourceException;
 import java.util.Optional;
 
-public class TwitterClientSave_v2 extends TwitterClient_v2 {
+public class TwitterClientSave_v2 extends TwitterClient_v2_api {
 
-    private static Integer MAX_ATTEMPTS = 5;
+    private HashMap<String, String> options;
+
+//    private static Integer MAX_ATTEMPTS = 5;
     private static Integer ATTEMPTS_WAIT_MS = 100;
     protected GenericClient twitterConverter, ppp;
     protected long session_id;
@@ -39,16 +39,16 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
         this.session_id = session_id;
     }
 
-    public TwitterClientSave_v2(String bearerToken, TweetRepository tweetRepository,
+    public TwitterClientSave_v2(HashMap<String, String> options, TweetRepository tweetRepository,
                                 GenericClient twitterConverter, GenericClient ppp,
-                                long interval,
                                 SessionRepository sessionRepository, TagRepository tagRepository,
                                 SessionTagRepository sessionTagRepository, ForeverTagRepository foreverTagRepository) {
-        super(bearerToken);
+        super(options);
+        this.options = options;
         this.tweetRepository = tweetRepository;
         this.twitterConverter = twitterConverter;
         this.ppp = ppp;
-        this.interval = interval;
+        this.interval = Long.parseLong(options.get("tweet.alive_interval_minutes")) * 60;
         this.sessionRepository = sessionRepository;
         this.tagRepository = tagRepository;
         this.sessionTagRepository = sessionTagRepository;
@@ -72,9 +72,7 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
                 }
             }
         } catch (Exception e) {
-            if (!isClosed.get()) {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
 
     }
@@ -177,9 +175,7 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
                 Tweet tweet = objectMapper.readValue(tweet_json, Tweet.class);
                 tweetRepository.save(tweet);
             } catch (Exception e) {
-                if (!isClosed.get()) {
-                    e.printStackTrace();
-                }
+                e.printStackTrace();
                 break;
             }
         }
@@ -190,7 +186,7 @@ public class TwitterClientSave_v2 extends TwitterClient_v2 {
         String result = null;
         int attempts = 0;
         boolean success = false;
-        while (!success && attempts < MAX_ATTEMPTS) {
+        while (!success && attempts < Integer.parseInt(options.get("tweet.max_attempts_external_app"))) {
             attempts++;
             try {
                 result = service.request(data);

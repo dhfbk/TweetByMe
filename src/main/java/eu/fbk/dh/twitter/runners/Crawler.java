@@ -109,10 +109,10 @@ public class Crawler implements Runnable {
                 twitterClient_v2.connectStream();
                 logger.warn("Stream ended");
             } catch (Exception e) {
-                if (twitterClient_v2.isClosed.get()) {
-                    Thread.currentThread().interrupt();
-                    break;
-                } else {
+//                if (twitterClient_v2.isClosed.get()) {
+//                    Thread.currentThread().interrupt();
+//                    break;
+//                } else {
                     logger.error(e.getMessage());
                     logger.info("Restarting service");
                     try {
@@ -121,7 +121,7 @@ public class Crawler implements Runnable {
                         interruptedException.printStackTrace();
                         break;
                     }
-                }
+//                }
             }
         }
     }

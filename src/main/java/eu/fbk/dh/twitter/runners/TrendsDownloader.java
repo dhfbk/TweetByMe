@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.Sets;
 import eu.fbk.dh.twitter.clients.TwitterClient_v1;
 import eu.fbk.dh.twitter.clients.TwitterClient_v2;
+import eu.fbk.dh.twitter.clients.TwitterClient_v2_api;
 import eu.fbk.dh.twitter.tables.HistoryTag;
 import eu.fbk.dh.twitter.tables.HistoryTagRepository;
 import eu.fbk.dh.twitter.tables.Tag;
@@ -22,7 +23,7 @@ public class TrendsDownloader implements Runnable {
     private static String TRENDS_PREFIX = "trend";
 
     TwitterClient_v1 twitterClient_v1;
-    TwitterClient_v2 twitterClient_v2;
+    TwitterClient_v2_api twitterClient_v2;
     HashMap<String, String> options;
     AtomicBoolean isRunning;
     final RecentUpdaterRunner recentUpdaterRunner;
@@ -30,7 +31,7 @@ public class TrendsDownloader implements Runnable {
 
     TagRepository tagRepository;
 
-    public TrendsDownloader(TwitterClient_v1 twitterClient_v1, TwitterClient_v2 twitterClient_v2,
+    public TrendsDownloader(TwitterClient_v1 twitterClient_v1, TwitterClient_v2_api twitterClient_v2,
                             HashMap<String, String> options,
                             TagRepository tagRepository,
                             AtomicBoolean isRunning, RecentUpdaterRunner recentUpdaterRunner, HistoryTagRepository historyTagRepository) {
@@ -59,7 +60,7 @@ public class TrendsDownloader implements Runnable {
 
             BiMap<String, String> rules = twitterClient_v2.getRules(TRENDS_PREFIX);
             Set<String> initialHashtags = new HashSet<>(rules.values());
-            logger.debug("Rules: {}", initialHashtags.toString());
+            logger.info("Rules: {}", initialHashtags.toString());
 
             // Delete all rules
 //            twitterClient_v2.deleteRules(new ArrayList<>(rules.keySet()));
@@ -135,9 +136,9 @@ public class TrendsDownloader implements Runnable {
                 idsToDelete.add(id);
             }
 
-            logger.debug("Rules to delete: {}", idsToDelete.toString());
+            logger.info("Rules to delete: {}", idsToDelete.toString());
             twitterClient_v2.deleteRules(idsToDelete);
-            logger.debug("Rules to add: {}", toAdd.toString());
+            logger.info("Rules to add: {}", toAdd.toString());
             twitterClient_v2.createRules(toAdd, TRENDS_PREFIX);
 
             logger.info("Ending trends client");

@@ -17,6 +17,14 @@ public class Defaults {
         defaultOptions.put("tweet.collect_next_days", "7");
         defaultOptions.put("tweet.group_by", "10");
 
+        // This is an estimation based on the Twitter limits
+        // https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-all
+        defaultOptions.put("tweet.sleep_search_ms", "2500");
+
+        defaultOptions.put("tweet.max_results", "100");
+        defaultOptions.put("tweet.max_pages_for_one_search", "5");
+        defaultOptions.put("tweet.max_attempts_external_app", "5");
+
         defaultOptions.put("tweet.converter_host", "dh-hetzner.fbk.eu");
         defaultOptions.put("tweet.converter_port", "9206");
         defaultOptions.put("tweet.converter_protocol", "http");
@@ -29,6 +37,7 @@ public class Defaults {
 
         defaultOptions.put("tweet.alive_interval_minutes", "1");
         defaultOptions.put("tweet.options_update_interval_minutes", "10");
+        defaultOptions.put("tweet.options_close_stream_minutes", "0");
         defaultOptions.put("tweet.trends_update_interval_minutes", "5");
         defaultOptions.put("tweet.trends_location", "23424853");
         defaultOptions.put("tweet.trends_number", "5");
@@ -43,6 +52,7 @@ public class Defaults {
         defaultOptions.put("twitter.bearer", "");
 
         defaultOptions.put("app.empty_db", "0");
+        defaultOptions.put("twitter.empty_rules", "0");
 
         defaultOptions.put("app.run_trend_server", "0");
         defaultOptions.put("app.run_update_previous", "1");

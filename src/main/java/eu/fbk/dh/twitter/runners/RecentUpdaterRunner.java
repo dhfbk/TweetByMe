@@ -2,6 +2,7 @@ package eu.fbk.dh.twitter.runners;
 
 import com.google.common.collect.Iterables;
 import eu.fbk.dh.twitter.clients.TwitterClient_v2;
+import eu.fbk.dh.twitter.clients.TwitterClient_v2_api;
 import eu.fbk.dh.twitter.tables.*;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -19,7 +20,7 @@ public class RecentUpdaterRunner {
     protected static final Logger logger = LogManager.getLogger();
     private static long TWITTER_START_TIME = 1262304000L;
 
-    TwitterClient_v2 twitterClient_v2;
+    TwitterClient_v2_api twitterClient_v2;
 
     SessionTagRepository sessionTagRepository;
     TagRepository tagRepository;
@@ -32,7 +33,7 @@ public class RecentUpdaterRunner {
         return hasJobs.get();
     }
 
-    public RecentUpdaterRunner(TwitterClient_v2 twitterClient_v2, ForeverTagRepository foreverTagRepository,
+    public RecentUpdaterRunner(TwitterClient_v2_api twitterClient_v2, ForeverTagRepository foreverTagRepository,
                                SessionTagRepository sessionTagRepository, TagRepository tagRepository, int group_by) {
         this.twitterClient_v2 = twitterClient_v2;
         this.sessionTagRepository = sessionTagRepository;
@@ -86,7 +87,7 @@ public class RecentUpdaterRunner {
                 for (Set<String> tagList : tagGroups) {
                     String tags = String.join(" OR ", tagList);
                     String searchString = "(" + tags + ") lang:" + lang;
-                    logger.info("Running updates for tags {} and session_id {}", tags, session_id);
+                    logger.info("Running updates for tags ({})/{} and session_id {}", tags, lang, session_id);
                     ArrayList<NameValuePair> queryParameters = new ArrayList<>();
                     queryParameters.add(new BasicNameValuePair("query", searchString));
                     queryParameters.add(new BasicNameValuePair("start_time", start_time));
@@ -122,7 +123,7 @@ public class RecentUpdaterRunner {
             String lang = tagToDo.getLang();
             long insert_time = tagToDo.getInsert_time();
             String next_token = tagToDo.getNext_token();
-            logger.info("Running historical updates for tag {}, lang {}, and insert_time {}", tag, lang, insert_time);
+            logger.info("Running historical updates for tag {}, lang {}, token {}, insert_time {}", tag, lang, next_token, insert_time);
             String searchString = tag + " lang:" + lang;
             String start_time = unixToTime(tagToDo.getStart_time());
             String end_time = unixToTime(insert_time);
